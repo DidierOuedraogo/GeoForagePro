@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GéoForage Pro - Gestion de données de forage minier</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --border: #cbd5e1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f1f5f9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--dark);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        h1 {
+            font-size: 1.875rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+            margin-top: 0;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid var(--border);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab:last-child {
+            border-right: none;
+        }
+        
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: var(--light);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .file-input-group {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--light);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .btn {
+            display: inline-block;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.375rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            color: white;
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .btn-primary:disabled {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+        }
+        
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background-color: var(--light);
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.625em;
+            font-size: 0.875em;
+            font-weight: 500;
+            border-radius: 0.25rem;
+            margin-right: 0.25rem;
+        }
+        
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing {
+            display: none;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        
+        .file-info-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 250px;
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GéoForage Pro - Gestion de données de forage minier</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="import">Import de données</div>
+            <div class="tab" data-tab="desurvey">Desurvey</div>
+            <div class="tab" data-tab="composite">Composites</div>
+            <div class="tab" data-tab="export">Export</div>
+        </div>
+        
+        <div id="import-tab" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Import des données de forage</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-input-group">
+                        <h3>Collars (positions de départ des forages)</h3>
+                        <input type="file" id="collars-input" accept=".csv">
+                        <p>Format attendu: HoleID, X, Y, Z, Azimuth, Dip, Length</p>
+                        <div class="file-info" id="collars-info"></div>
+                    </div>
+                    
+                    <div class="file-input-group">
+                        <h3>Survey (déviations)</h3>
+                        <input type="file" id="survey-input" accept=".csv">
+                        <p>Format attendu: HoleID, Depth, Azimuth, Dip</p>
+                        <div class="file-info" id="survey-info"></div>
+                    </div>
+                    
+                    <div class="file-input-group">
+                        <h3>Assays (analyses chimiques)</h3>
+                        <input type="file" id="assays-input" accept=".csv">
+                        <p>Format attendu: HoleID, From, To, puis colonnes de teneurs (Au, Cu, etc.)</p>
+                        <div class="file-info" id="assays-info"></div>
+                    </div>
+                    
+                    <div class="file-input-group">
+                        <h3>Lithology (descriptions géologiques)</h3>
+                        <input type="file" id="lithology-input" accept=".csv">
+                        <p>Format attendu: HoleID, From, To, RockCode, Description</p>
+                        <div class="file-info" id="lithology-info"></div>
+                    </div>
+                    
+                    <button id="validate-data" class="btn btn-primary">Valider les données</button>
+                    
+                    <div id="validation-result" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="desurvey-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Calcul des coordonnées 3D (Desurvey)</h2>
+                </div>
+                <div class="card-body">
+                    <p>Cette fonction convertit les données de forage en coordonnées 3D le long du trou, et y ajoute les teneurs et lithologies.</p>
+                    
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="desurvey-interval">Intervalle de calcul (m):</label>
+                            <input type="number" id="desurvey-interval" min="0.01" step="0.01" value="1.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="desurvey-method">Méthode de calcul:</label>
+                            <select id="desurvey-method">
+                                <option value="minimum-curvature">Courbure minimale</option>
+                                <option value="tangential">Tangentielle</option>
+                                <option value="average-tangential">Tangentielle moyenne</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="include-assays">Inclure les teneurs:</label>
+                            <select id="include-assays">
+                                <option value="true">Oui</option>
+                                <option value="false">Non</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="include-lithology">Inclure la lithologie:</label>
+                            <select id="include-lithology">
+                                <option value="true">Oui</option>
+                                <option value="false">Non</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button id="calculate-desurvey" class="btn btn-primary" disabled>Calculer les coordonnées 3D</button>
+                    
+                    <div class="processing" id="desurvey-processing">
+                        <span class="spinner"></span>
+                        <span>Calcul en cours, veuillez patienter...</span>
+                    </div>
+                    
+                    <div id="desurvey-result" class="mt-4"></div>
+                    
+                    <div class="table-container">
+                        <table id="desurvey-table">
+                            <thead>
+                                <tr>
+                                    <th>HoleID</th>
+                                    <th>Depth</th>
+                                    <th>X</th>
+                                    <th>Y</th>
+                                    <th>Z</th>
+                                    <th>Azimuth</th>
+                                    <th>Dip</th>
+                                    <!-- Colonnes dynamiques pour les teneurs et lithologies -->
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="composite-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Création de composites</h2>
+                </div>
+                <div class="card-body">
+                    <p>Créez des composites sur les données d'analyse selon vos critères.</p>
+                    
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="composite-method">Méthode de composite:</label>
+                            <select id="composite-method">
+                                <option value="fixed-length">Longueur fixe</option>
+                                <option value="geological">Unité géologique</option>
+                                <option value="grade-boundaries">Limites de teneur</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="composite-length">Longueur du composite (m):</label>
+                            <input type="number" id="composite-length" min="0.1" step="0.1" value="1.0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="min-length">Longueur minimale (m):</label>
+                            <input type="number" id="min-length" min="0.1" step="0.1" value="0.5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="merge-remainder">Fusionner les reliquats:</label>
+                            <select id="merge-remainder">
+                                <option value="previous">Avec l'intervalle précédent</option>
+                                <option value="next">Avec l'intervalle suivant</option>
+                                <option value="none">Ne pas fusionner</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="grade-column-group">
+                            <label for="grade-column">Colonne de teneur (pour limites de teneur):</label>
+                            <select id="grade-column">
+                                <!-- Rempli dynamiquement -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="cutoff-grade-group">
+                            <label for="cutoff-grade">Teneur de coupure:</label>
+                            <input type="number" id="cutoff-grade" min="0" step="0.01" value="0.5">
+                        </div>
+                    </div>
+                    
+                    <button id="calculate-composites" class="btn btn-primary" disabled>Calculer les composites</button>
+                    
+                    <div class="processing" id="composite-processing">
+                        <span class="spinner"></span>
+                        <span>Calcul en cours, veuillez patienter...</span>
+                    </div>
+                    
+                    <div id="composite-result" class="mt-4"></div>
+                    
+                    <div class="table-container">
+                        <table id="composite-table">
+                            <thead>
+                                <tr>
+                                    <th>HoleID</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Length</th>
+                                    <!-- Colonnes de teneurs ajoutées dynamiquement -->
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="export-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Export des données</h2>
+                </div>
+                <div class="card-body">
+                    <p>Exportez vos données en fichiers CSV.</p>
+                    
+                    <div class="btn-group">
+                        <button id="export-desurvey" class="btn btn-primary" disabled>Exporter Desurvey CSV</button>
+                        <button id="export-composites" class="btn btn-primary" disabled>Exporter Composites CSV</button>
+                    </div>
+                    
+                    <div id="export-result" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // État global de l'application
+        const appState = {
+            collars: null,
+            survey: null,
+            assays: null,
+            lithology: null,
+            desurveyedData: null,
+            composites: null,
+            validData: false
+        };
+
+        // Navigation par onglets
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabContent = document.getElementById(`${tab.dataset.tab}-tab`);
+                tabContent.classList.add('active');
+            });
+        });
+
+        // Gestion des fichiers CSV
+        function parseCSV(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const csvData = event.target.result;
+                    const lines = csvData.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    
+                    const data = [];
+                    for(let i = 1; i < lines.length; i++) {
+                        if(lines[i].trim() === '') continue;
+                        
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const entry = {};
+                        
+                        headers.forEach((header, index) => {
+                            // Conversion en nombre si possible
+                            const value = values[index];
+                            if(!isNaN(value) && value !== '') {
+                                entry[header] = parseFloat(value);
+                            } else {
+                                entry[header] = value;
+                            }
+                        });
+                        
+                        data.push(entry);
+                    }
+                    
+                    resolve({headers, data});
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('Erreur de lecture du fichier CSV'));
+                };
+                
+                reader.readAsText(file);
+            });
+        }
+
+        // Écouteurs pour les inputs de fichiers
+        document.getElementById('collars-input').addEventListener('change', async (e) => {
+            try {
+                if(e.target.files[0]) {
+                    appState.collars = await parseCSV(e.target.files[0]);
+                    updateFileInfo('collars-info', e.target.files[0].name, appState.collars.data.length);
+                }
+            } catch(error) {
+                displayMessage('validation-result', `Erreur: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('survey-input').addEventListener('change', async (e) => {
+            try {
+                if(e.target.files[0]) {
+                    appState.survey = await parseCSV(e.target.files[0]);
+                    updateFileInfo('survey-info', e.target.files[0].name, appState.survey.data.length);
+                }
+            } catch(error) {
+                displayMessage('validation-result', `Erreur: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('assays-input').addEventListener('change', async (e) => {
+            try {
+                if(e.target.files[0]) {
+                    appState.assays = await parseCSV(e.target.files[0]);
+                    updateFileInfo('assays-info', e.target.files[0].name, appState.assays.data.length);
+                    
+                    // Remplir les options de colonnes de teneur
+                    const gradeSelect = document.getElementById('grade-column');
+                    gradeSelect.innerHTML = '';
+                    
+                    appState.assays.headers.forEach(header => {
+                        if(header !== 'HoleID' && header !== 'From' && header !== 'To') {
+                            const option = document.createElement('option');
+                            option.value = header;
+                            option.textContent = header;
+                            gradeSelect.appendChild(option);
+                        }
+                    });
+                }
+            } catch(error) {
+                displayMessage('validation-result', `Erreur: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('lithology-input').addEventListener('change', async (e) => {
+            try {
+                if(e.target.files[0]) {
+                    appState.lithology = await parseCSV(e.target.files[0]);
+                    updateFileInfo('lithology-info', e.target.files[0].name, appState.lithology.data.length);
+                }
+            } catch(error) {
+                displayMessage('validation-result', `Erreur: ${error.message}`, 'error');
+            }
+        });
+
+        function updateFileInfo(elementId, fileName, rowCount) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="file-info-name">${fileName}</div>
+                <span class="badge badge-success">${rowCount} lignes</span>
+            `;
+        }
+
+        // Afficher/masquer les paramètres de limites de teneur
+        document.getElementById('composite-method').addEventListener('change', (e) => {
+            const showGradeSettings = e.target.value === 'grade-boundaries';
+            document.getElementById('grade-column-group').style.display = showGradeSettings ? 'block' : 'none';
+            document.getElementById('cutoff-grade-group').style.display = showGradeSettings ? 'block' : 'none';
+        });
+
+        // Validation des données
+        document.getElementById('validate-data').addEventListener('click', () => {
+            let missingFiles = [];
+            
+            if(!appState.collars) missingFiles.push('Collars');
+            if(!appState.survey) missingFiles.push('Survey');
+            
+            if(missingFiles.length > 0) {
+                displayMessage('validation-result', `Erreur: fichiers manquants - ${missingFiles.join(', ')}`, 'error');
+                appState.validData = false;
+                return;
+            }
+            
+            // Valider les formats de fichiers
+            try {
+                validateCollars();
+                validateSurvey();
+                if(appState.assays) validateAssays();
+                if(appState.lithology) validateLithology();
+                
+                appState.validData = true;
+                document.getElementById('calculate-desurvey').disabled = false;
+                
+                displayMessage('validation-result', 'Validation réussie! Vous pouvez maintenant procéder au desurvey.', 'success');
+            } catch(error) {
+                displayMessage('validation-result', `Erreur de validation: ${error.message}`, 'error');
+                appState.validData = false;
+            }
+        });
+
+        function validateCollars() {
+            const requiredHeaders = ['HoleID', 'X', 'Y', 'Z', 'Azimuth', 'Dip'];
+            
+            requiredHeaders.forEach(header => {
+                if(!appState.collars.headers.includes(header)) {
+                    throw new Error(`Fichier collars: colonne manquante "${header}"`);
+                }
+            });
+        }
+
+        function validateSurvey() {
+            const requiredHeaders = ['HoleID', 'Depth', 'Azimuth', 'Dip'];
+            
+            requiredHeaders.forEach(header => {
+                if(!appState.survey.headers.includes(header)) {
+                    throw new Error(`Fichier survey: colonne manquante "${header}"`);
+                }
+            });
+            
+            // Vérifier que tous les trous du survey existent dans collars
+            const collarHoleIds = new Set(appState.collars.data.map(row => row.HoleID));
+            const surveyHoleIds = new Set(appState.survey.data.map(row => row.HoleID));
+            
+            for(const holeId of surveyHoleIds) {
+                if(!collarHoleIds.has(holeId)) {
+                    throw new Error(`Le trou "${holeId}" existe dans le fichier survey mais pas dans collars`);
+                }
+            }
+        }
+
+        function validateAssays() {
+            const requiredHeaders = ['HoleID', 'From', 'To'];
+            
+            requiredHeaders.forEach(header => {
+                if(!appState.assays.headers.includes(header)) {
+                    throw new Error(`Fichier assays: colonne manquante "${header}"`);
+                }
+            });
+            
+            // Vérifier qu'il y a au moins une colonne de teneur
+            if(appState.assays.headers.length <= 3) {
+                throw new Error('Fichier assays: aucune colonne de teneur trouvée');
+            }
+            
+            // Vérifier que From < To
+            for(const row of appState.assays.data) {
+                if(row.From >= row.To) {
+                    throw new Error(`Fichier assays: intervalles invalides (From >= To) pour le trou ${row.HoleID}`);
+                }
+            }
+        }
+
+        function validateLithology() {
+            const requiredHeaders = ['HoleID', 'From', 'To', 'RockCode'];
+            
+            requiredHeaders.forEach(header => {
+                if(!appState.lithology.headers.includes(header)) {
+                    throw new Error(`Fichier lithology: colonne manquante "${header}"`);
+                }
+            });
+            
+            // Vérifier que From < To
+            for(const row of appState.lithology.data) {
+                if(row.From >= row.To) {
+                    throw new Error(`Fichier lithology: intervalles invalides (From >= To) pour le trou ${row.HoleID}`);
+                }
+            }
+        }
+
+        // Calcul du desurvey
+        document.getElementById('calculate-desurvey').addEventListener('click', async () => {
+            if(!appState.validData) {
+                displayMessage('desurvey-result', 'Veuillez d\'abord valider vos données', 'warning');
+                return;
+            }
+            
+            const interval = parseFloat(document.getElementById('desurvey-interval').value);
+            const method = document.getElementById('desurvey-method').value;
+            const includeAssays = document.getElementById('include-assays').value === 'true';
+            const includeLithology = document.getElementById('include-lithology').value === 'true';
+            
+            // Vérifier la disponibilité des données
+            if(includeAssays && !appState.assays) {
+                displayMessage('desurvey-result', 'Vous avez choisi d\'inclure les teneurs mais aucun fichier d\'analyses n\'a été chargé', 'warning');
+                return;
+            }
+            
+            if(includeLithology && !appState.lithology) {
+                displayMessage('desurvey-result', 'Vous avez choisi d\'inclure la lithologie mais aucun fichier de lithologie n\'a été chargé', 'warning');
+                return;
+            }
+            
+            try {
+                // Afficher l'animation de chargement
+                document.getElementById('desurvey-processing').style.display = 'flex';
+                document.getElementById('calculate-desurvey').disabled = true;
+                
+                // Traitement asynchrone pour ne pas bloquer l'interface
+                setTimeout(async () => {
+                    try {
+                        appState.desurveyedData = calculateDesurvey(interval, method, includeAssays, includeLithology);
+                        
+                        // Affichage du résultat
+                        displayMessage('desurvey-result', `Desurvey calculé avec succès: ${appState.desurveyedData.length} points`, 'success');
+                        document.getElementById('calculate-composites').disabled = appState.assays ? false : true;
+                        document.getElementById('export-desurvey').disabled = false;
+                        
+                        // Mise à jour du tableau
+                        displayDesurveyTable();
+                    } catch(error) {
+                        displayMessage('desurvey-result', `Erreur de calcul: ${error.message}`, 'error');
+                    } finally {
+                        // Masquer l'animation de chargement
+                        document.getElementById('desurvey-processing').style.display = 'none';
+                        document.getElementById('calculate-desurvey').disabled = false;
+                    }
+                }, 100);
+            } catch(error) {
+                document.getElementById('desurvey-processing').style.display = 'none';
+                document.getElementById('calculate-desurvey').disabled = false;
+                displayMessage('desurvey-result', `Erreur de calcul: ${error.message}`, 'error');
+            }
+        });
+
+        function calculateDesurvey(interval, method, includeAssays, includeLithology) {
+            const result = [];
+            
+            // Préparer les données d'assays pour une recherche rapide
+            const assaysByHole = {};
+            if(includeAssays && appState.assays) {
+                appState.assays.data.forEach(assay => {
+                    if(!assaysByHole[assay.HoleID]) {
+                        assaysByHole[assay.HoleID] = [];
+                    }
+                    assaysByHole[assay.HoleID].push(assay);
+                });
+            }
+            
+            // Préparer les données de lithologie pour une recherche rapide
+            const lithoByHole = {};
+            if(includeLithology && appState.lithology) {
+                appState.lithology.data.forEach(litho => {
+                    if(!lithoByHole[litho.HoleID]) {
+                        lithoByHole[litho.HoleID] = [];
+                    }
+                    lithoByHole[litho.HoleID].push(litho);
+                });
+            }
+            
+            // Pour chaque trou de forage
+            appState.collars.data.forEach(collar => {
+                const holeId = collar.HoleID;
+                
+                // Récupérer les données de survey pour ce trou
+                const holeSurveys = appState.survey.data
+                    .filter(s => s.HoleID === holeId)
+                    .sort((a, b) => a.Depth - b.Depth);
+                
+                if(holeSurveys.length === 0) {
+                    console.warn(`Aucune donnée de survey pour le trou ${holeId}`);
+                    return;
+                }
+                
+                // Ajouter le point de départ (collar)
+                let currentX = collar.X;
+                let currentY = collar.Y;
+                let currentZ = collar.Z;
+                let currentAzimuth = collar.Azimuth;
+                let currentDip = collar.Dip;
+                let currentDepth = 0;
+                
+                const collarPoint = {
+                    HoleID: holeId,
+                    Depth: currentDepth,
+                    X: currentX,
+                    Y: currentY,
+                    Z: currentZ,
+                    Azimuth: currentAzimuth,
+                    Dip: currentDip
+                };
+                
+                // Ajouter les teneurs et la lithologie au point collar si demandé
+                if(includeAssays) {
+                    addAssaysToPoint(collarPoint, assaysByHole[holeId] || []);
+                }
+                
+                if(includeLithology) {
+                    addLithologyToPoint(collarPoint, lithoByHole[holeId] || []);
+                }
+                
+                result.push(collarPoint);
+                
+                // Calculer les points intermédiaires
+                for(let i = 0; i < holeSurveys.length; i++) {
+                    const survey = holeSurveys[i];
+                    const nextDepth = survey.Depth;
+                    
+                    if(nextDepth <= currentDepth) continue;
+                    
+                    // Calculer les points intermédiaires
+                    const steps = Math.ceil((nextDepth - currentDepth) / interval);
+                    const stepSize = (nextDepth - currentDepth) / steps;
+                    
+                    for(let step = 1; step <= steps; step++) {
+                        const depth = currentDepth + step * stepSize;
+                        
+                        // Interpolation des azimuts et dips
+                        let azimuth, dip;
+                        
+                        if(i === 0) {
+                            // Entre le collar et le premier survey
+                            const t = (depth - currentDepth) / (nextDepth - currentDepth);
+                            azimuth = currentAzimuth + t * (survey.Azimuth - currentAzimuth);
+                            dip = currentDip + t * (survey.Dip - currentDip);
+                        } else {
+                            const prevSurvey = holeSurveys[i - 1];
+                            
+                            if(depth <= prevSurvey.Depth) {
+                                azimuth = prevSurvey.Azimuth;
+                                dip = prevSurvey.Dip;
+                            } else if(depth >= survey.Depth) {
+                                azimuth = survey.Azimuth;
+                                dip = survey.Dip;
+                            } else {
+                                const t = (depth - prevSurvey.Depth) / (survey.Depth - prevSurvey.Depth);
+                                azimuth = prevSurvey.Azimuth + t * (survey.Azimuth - prevSurvey.Azimuth);
+                                dip = prevSurvey.Dip + t * (survey.Dip - prevSurvey.Dip);
+                            }
+                        }
+                        
+                        // Calcul des coordonnées 3D en fonction de la méthode
+                        const segmentLength = depth - currentDepth;
+                        let dx, dy, dz;
+                        
+                        // Conversion en radians
+                        const azRad = (90 - azimuth) * Math.PI / 180;
+                        const dipRad = -dip * Math.PI / 180;
+                        
+                        if(method === 'tangential') {
+                            // Méthode tangentielle
+                            dx = segmentLength * Math.cos(dipRad) * Math.cos(azRad);
+                            dy = segmentLength * Math.cos(dipRad) * Math.sin(azRad);
+                            dz = segmentLength * Math.sin(dipRad);
+                        } else if(method === 'average-tangential') {
+                            // Méthode tangentielle moyenne (avec le point précédent)
+                            const prevAzRad = (90 - currentAzimuth) * Math.PI / 180;
+                            const prevDipRad = -currentDip * Math.PI / 180;
+                            
+                            dx = segmentLength * Math.cos(dipRad) * Math.cos(azRad) * 0.5 +
+                                 segmentLength * Math.cos(prevDipRad) * Math.cos(prevAzRad) * 0.5;
+                            dy = segmentLength * Math.cos(dipRad) * Math.sin(azRad) * 0.5 +
+                                 segmentLength * Math.cos(prevDipRad) * Math.sin(prevAzRad) * 0.5;
+                            dz = segmentLength * Math.sin(dipRad) * 0.5 +
+                                 segmentLength * Math.sin(prevDipRad) * 0.5;
+                        } else {
+                            // Méthode de courbure minimale (par défaut)
+                            const prevAzRad = (90 - currentAzimuth) * Math.PI / 180;
+                            const prevDipRad = -currentDip * Math.PI / 180;
+                            
+                            // Angle entre les deux vecteurs de direction
+                            const dotProduct = Math.sin(prevDipRad) * Math.sin(dipRad) +
+                                            Math.cos(prevDipRad) * Math.cos(dipRad) *
+                                            Math.cos(azRad - prevAzRad);
+                            
+                            const angle = Math.acos(Math.min(1, Math.max(-1, dotProduct)));
+                            
+                            if(Math.abs(angle) < 0.001) {
+                                // Cas presque droit
+                                dx = segmentLength * Math.cos(dipRad) * Math.cos(azRad);
+                                dy = segmentLength * Math.cos(dipRad) * Math.sin(azRad);
+                                dz = segmentLength * Math.sin(dipRad);
+                            } else {
+                                const factor = segmentLength * Math.tan(angle/2) / angle;
+                                
+                                dx = factor * (
+                                    Math.cos(prevDipRad) * Math.cos(prevAzRad) +
+                                    Math.cos(dipRad) * Math.cos(azRad)
+                                );
+                                dy = factor * (
+                                    Math.cos(prevDipRad) * Math.sin(prevAzRad) +
+                                    Math.cos(dipRad) * Math.sin(azRad)
+                                );
+                                dz = factor * (
+                                    Math.sin(prevDipRad) + Math.sin(dipRad)
+                                );
+                            }
+                        }
+                        
+                        // Mettre à jour les coordonnées
+                        currentX += dx;
+                        currentY += dy;
+                        currentZ += dz;
+                        currentDepth = depth;
+                        currentAzimuth = azimuth;
+                        currentDip = dip;
+                        
+                        // Créer le point
+                        const point = {
+                            HoleID: holeId,
+                            Depth: currentDepth,
+                            X: currentX,
+                            Y: currentY,
+                            Z: currentZ,
+                            Azimuth: currentAzimuth,
+                            Dip: currentDip
+                        };
+                        
+                        // Ajouter les teneurs et la lithologie si demandé
+                        if(includeAssays) {
+                            addAssaysToPoint(point, assaysByHole[holeId] || []);
+                        }
+                        
+                        if(includeLithology) {
+                            addLithologyToPoint(point, lithoByHole[holeId] || []);
+                        }
+                        
+                        // Ajouter le point au résultat
+                        result.push(point);
+                    }
+                }
+            });
+            
+            return result;
+        }
+
+        function addAssaysToPoint(point, assays) {
+            if(!assays || assays.length === 0) return;
+            
+            // Trouver tous les assays qui contiennent cette profondeur
+            const matchingAssays = assays.filter(a => point.Depth >= a.From && point.Depth <= a.To);
+            
+            if(matchingAssays.length === 0) return;
+            
+            // Si plusieurs assays correspondent, on prend celui qui a l'intervalle le plus petit
+            let bestAssay = matchingAssays[0];
+            let bestLength = bestAssay.To - bestAssay.From;
+            
+            for(let i = 1; i < matchingAssays.length; i++) {
+                const assay = matchingAssays[i];
+                const length = assay.To - assay.From;
+                
+                if(length < bestLength) {
+                    bestAssay = assay;
+                    bestLength = length;
+                }
+            }
+            
+            // Ajouter les valeurs de teneur au point
+            const gradeColumns = appState.assays.headers.filter(h => 
+                h !== 'HoleID' && h !== 'From' && h !== 'To'
+            );
+            
+            gradeColumns.forEach(column => {
+                point[column] = bestAssay[column] || 0;
+            });
+        }
+
+        function addLithologyToPoint(point, lithos) {
+            if(!lithos || lithos.length === 0) return;
+            
+            // Trouver la lithologie qui contient cette profondeur
+            const matchingLitho = lithos.find(l => point.Depth >= l.From && point.Depth <= l.To);
+            
+            if(matchingLitho) {
+                point.RockCode = matchingLitho.RockCode;
+                point.RockDesc = matchingLitho.Description || '';
+            }
+        }
+
+        function displayDesurveyTable() {
+            if(!appState.desurveyedData || appState.desurveyedData.length === 0) return;
+            
+            const tableBody = document.querySelector('#desurvey-table tbody');
+            const tableHead = document.querySelector('#desurvey-table thead tr');
+            tableBody.innerHTML = '';
+            
+            // Recréer les en-têtes avec les colonnes dynamiques
+            tableHead.innerHTML = '<th>HoleID</th><th>Depth</th><th>X</th><th>Y</th><th>Z</th><th>Azimuth</th><th>Dip</th>';
+            
+            // Identifier les colonnes additionnelles (teneurs et lithologie)
+            const additionalColumns = Object.keys(appState.desurveyedData[0]).filter(key => 
+                !['HoleID', 'Depth', 'X', 'Y', 'Z', 'Azimuth', 'Dip'].includes(key)
+            );
+            
+            // Ajouter les en-têtes pour les colonnes additionnelles
+            additionalColumns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                tableHead.appendChild(th);
+            });
+            
+            // Afficher les 100 premières lignes
+            const displayLimit = Math.min(100, appState.desurveyedData.length);
+            
+            for(let i = 0; i < displayLimit; i++) {
+                const row = appState.desurveyedData[i];
+                const tr = document.createElement('tr');
+                
+                let html = `
+                    <td>${row.HoleID}</td>
+                    <td>${row.Depth.toFixed(2)}</td>
+                    <td>${row.X.toFixed(2)}</td>
+                    <td>${row.Y.toFixed(2)}</td>
+                    <td>${row.Z.toFixed(2)}</td>
+                    <td>${row.Azimuth.toFixed(2)}</td>
+                    <td>${row.Dip.toFixed(2)}</td>
+                `;
+                
+                // Ajouter les valeurs des colonnes additionnelles
+                additionalColumns.forEach(column => {
+                    const value = row[column];
+                    
+                    if(typeof value === 'number') {
+                        html += `<td>${value.toFixed(3)}</td>`;
+                    } else {
+                        html += `<td>${value || ''}</td>`;
+                    }
+                });
+                
+                tr.innerHTML = html;
+                tableBody.appendChild(tr);
+            }
+            
+            if(appState.desurveyedData.length > displayLimit) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="${7 + additionalColumns.length}">... ${appState.desurveyedData.length - displayLimit} autres lignes non affichées ...</td>`;
+                tableBody.appendChild(tr);
+            }
+        }
+
+        // Calcul des composites
+        document.getElementById('calculate-composites').addEventListener('click', async () => {
+            if(!appState.desurveyedData) {
+                displayMessage('composite-result', 'Veuillez d\'abord calculer le desurvey', 'warning');
+                return;
+            }
+            
+            if(!appState.assays) {
+                displayMessage('composite-result', 'Aucune donnée d\'analyse (assays) disponible', 'warning');
+                return;
+            }
+            
+            const method = document.getElementById('composite-method').value;
+            const compositeLength = parseFloat(document.getElementById('composite-length').value);
+            const minLength = parseFloat(document.getElementById('min-length').value);
+            const mergeRemainder = document.getElementById('merge-remainder').value;
+            const gradeColumn = document.getElementById('grade-column').value;
+            const cutoffGrade = parseFloat(document.getElementById('cutoff-grade').value);
+            
+            // Vérifications
+            if(method === 'geological' && !appState.lithology) {
+                displayMessage('composite-result', 'Vous avez choisi la méthode par unité géologique mais aucun fichier de lithologie n\'a été chargé', 'warning');
+                return;
+            }
+            
+            try {
+                // Afficher l'animation de chargement
+                document.getElementById('composite-processing').style.display = 'flex';
+                document.getElementById('calculate-composites').disabled = true;
+                
+                // Traitement asynchrone pour ne pas bloquer l'interface
+                setTimeout(async () => {
+                    try {
+                        appState.composites = calculateComposites(method, compositeLength, minLength, mergeRemainder, gradeColumn, cutoffGrade);
+                        
+                        // Affichage du résultat
+                        displayMessage('composite-result', `Composites calculés avec succès: ${appState.composites.length} intervalles`, 'success');
+                        document.getElementById('export-composites').disabled = false;
+                        
+                        // Mise à jour du tableau
+                        displayCompositeTable();
+                    } catch(error) {
+                        displayMessage('composite-result', `Erreur de calcul: ${error.message}`, 'error');
+                    } finally {
+                        // Masquer l'animation de chargement
+                        document.getElementById('composite-processing').style.display = 'none';
+                        document.getElementById('calculate-composites').disabled = false;
+                    }
+                }, 100);
+            } catch(error) {
+                document.getElementById('composite-processing').style.display = 'none';
+                document.getElementById('calculate-composites').disabled = false;
+                displayMessage('composite-result', `Erreur de calcul: ${error.message}`, 'error');
+            }
+        });
+
+        function calculateComposites(method, compositeLength, minLength, mergeRemainder, gradeColumn, cutoffGrade) {
+            const result = [];
+            
+            // Regrouper les assays par trou
+            const assaysByHole = {};
+            appState.assays.data.forEach(assay => {
+                if(!assaysByHole[assay.HoleID]) {
+                    assaysByHole[assay.HoleID] = [];
+                }
+                assaysByHole[assay.HoleID].push(assay);
+            });
+            
+            // Regrouper la lithologie par trou si disponible
+            const lithoByHole = {};
+            if(appState.lithology) {
+                appState.lithology.data.forEach(litho => {
+                    if(!lithoByHole[litho.HoleID]) {
+                        lithoByHole[litho.HoleID] = [];
+                    }
+                    lithoByHole[litho.HoleID].push(litho);
+                });
+            }
+            
+            // Pour chaque trou
+            Object.keys(assaysByHole).forEach(holeId => {
+                const assays = assaysByHole[holeId].sort((a, b) => a.From - b.From);
+                
+                if(method === 'fixed-length') {
+                    // Méthode de longueur fixe
+                    let currentFrom = assays[0].From;
+                    let currentTo = currentFrom + compositeLength;
+                    let compositeAssays = [];
+                    
+                    for(const assay of assays) {
+                        if(assay.From >= currentTo) {
+                            // Créer un composite avec les échantillons accumulés
+                            if(compositeAssays.length > 0) {
+                                const composite = createComposite(holeId, compositeAssays, currentFrom, currentTo);
+                                result.push(composite);
+                            }
+                            
+                            // Démarrer un nouveau composite
+                            currentFrom = assay.From;
+                            currentTo = currentFrom + compositeLength;
+                            compositeAssays = [assay];
+                        } else if(assay.To <= currentTo) {
+                            // Ajouter tout l'échantillon au composite actuel
+                            compositeAssays.push(assay);
+                        } else {
+                            // L'échantillon chevauche la limite du composite
+                            const splitPoint = currentTo;
+                            
+                            // Partie dans le composite courant
+                            const partAssay1 = {...assay, To: splitPoint};
+                            compositeAssays.push(partAssay1);
+                            
+                            // Créer le composite
+                            const composite = createComposite(holeId, compositeAssays, currentFrom, currentTo);
+                            result.push(composite);
+                            
+                            // Démarrer un nouveau composite avec le reste
+                            currentFrom = splitPoint;
+                            currentTo = currentFrom + compositeLength;
+                            compositeAssays = [{...assay, From: splitPoint}];
+                        }
+                    }
+                    
+                    // Ajouter le dernier composite s'il y a des données
+                    if(compositeAssays.length > 0) {
+                        const lastTo = Math.min(currentTo, compositeAssays[compositeAssays.length - 1].To);
+                        const composite = createComposite(holeId, compositeAssays, currentFrom, lastTo);
+                        
+                        // Gérer les reliquats trop courts
+                        if(composite.Length < minLength && result.length > 0 && mergeRemainder !== 'none') {
+                            if(mergeRemainder === 'previous') {
+                                const prev = result[result.length - 1];
+                                prev.To = composite.To;
+                                prev.Length = prev.To - prev.From;
+                                
+                                // Recalculer les teneurs du composite précédent
+                                const allAssays = [...prev._assays, ...compositeAssays];
+                                recalculateGrades(prev, allAssays);
+                            } else {
+                                // Garder le reliquat pour l'instant
+                                result.push(composite);
+                            }
+                        } else {
+                            result.push(composite);
+                        }
+                    }
+                } else if(method === 'geological' && appState.lithology) {
+                    // Méthode par unité géologique
+                    const lithos = lithoByHole[holeId];
+                    
+                    if(!lithos || lithos.length === 0) {
+                        console.warn(`Aucune donnée lithologique pour le trou ${holeId}`);
+                        return;
+                    }
+                    
+                    // Trier par profondeur
+                    lithos.sort((a, b) => a.From - b.From);
+                    
+                    // Pour chaque unité géologique
+                    for(const litho of lithos) {
+                        // Trouver tous les assays qui chevauchent cette unité
+                        const lithoAssays = [];
+                        
+                        for(const assay of assays) {
+                            if(assay.To <= litho.From || assay.From >= litho.To) {
+                                // Pas de chevauchement
+                                continue;
+                            }
+                            
+                            // Calculer la partie qui chevauche
+                            const overlapFrom = Math.max(assay.From, litho.From);
+                            const overlapTo = Math.min(assay.To, litho.To);
+                            
+                            lithoAssays.push({...assay, From: overlapFrom, To: overlapTo});
+                        }
+                        
+                        if(lithoAssays.length > 0) {
+                            // Créer un composite pour cette unité
+                            const composite = createComposite(holeId, lithoAssays, litho.From, litho.To);
+                            composite.RockCode = litho.RockCode;
+                            composite.RockDesc = litho.Description || '';
+                            result.push(composite);
+                        }
+                    }
+                } else if(method === 'grade-boundaries') {
+                    // Méthode par limites de teneur
+                    let currentComposite = null;
+                    let compositeAssays = [];
+                    
+                    for(const assay of assays) {
+                        const grade = assay[gradeColumn] || 0;
+                        const isAboveCutoff = grade >= cutoffGrade;
+                        
+                        if(currentComposite === null) {
+                            // Démarrer un nouveau composite
+                            currentComposite = { isAboveCutoff };
+                            compositeAssays = [assay];
+                            continue;
+                        }
+                        
+                        if(isAboveCutoff === currentComposite.isAboveCutoff) {
+                            // Continuer le composite actuel
+                            compositeAssays.push(assay);
+                        } else {
+                            // Créer un composite et démarrer un nouveau
+                            const from = compositeAssays[0].From;
+                            const to = compositeAssays[compositeAssays.length - 1].To;
+                            
+                            const composite = createComposite(holeId, compositeAssays, from, to);
+                            composite.AboveCutoff = currentComposite.isAboveCutoff;
+                            result.push(composite);
+                            
+                            currentComposite = { isAboveCutoff };
+                            compositeAssays = [assay];
+                        }
+                    }
+                    
+                    // Ajouter le dernier composite
+                    if(compositeAssays.length > 0) {
+                        const from = compositeAssays[0].From;
+                        const to = compositeAssays[compositeAssays.length - 1].To;
+                        
+                        const composite = createComposite(holeId, compositeAssays, from, to);
+                        composite.AboveCutoff = currentComposite.isAboveCutoff;
+                        result.push(composite);
+                    }
+                }
+            });
+            
+            return result;
+        }
+
+        function createComposite(holeId, assays, from, to) {
+            const length = to - from;
+            
+            // Initialiser le composite
+            const composite = {
+                HoleID: holeId,
+                From: from,
+                To: to,
+                Length: length,
+                _assays: assays // Garder une référence aux assays utilisés
+            };
+            
+            // Calculer les teneurs pondérées par la longueur
+            recalculateGrades(composite, assays);
+            
+            return composite;
+        }
+
+        function recalculateGrades(composite, assays) {
+            const gradeColumns = appState.assays.headers.filter(h => 
+                h !== 'HoleID' && h !== 'From' && h !== 'To'
+            );
+            
+            gradeColumns.forEach(column => {
+                let weightedSum = 0;
+                let totalLength = 0;
+                
+                assays.forEach(assay => {
+                    const assayLength = assay.To - assay.From;
+                    const grade = assay[column] || 0;
+                    
+                    weightedSum += grade * assayLength;
+                    totalLength += assayLength;
+                });
+                
+                composite[column] = totalLength > 0 ? weightedSum / totalLength : 0;
+            });
+        }
+
+        function displayCompositeTable() {
+            if(!appState.composites || appState.composites.length === 0) return;
+            
+            const tableBody = document.querySelector('#composite-table tbody');
+            const tableHead = document.querySelector('#composite-table thead tr');
+            tableBody.innerHTML = '';
+            
+            // Recréer les en-têtes
+            tableHead.innerHTML = '<th>HoleID</th><th>From</th><th>To</th><th>Length</th>';
+            
+            // Identifier toutes les colonnes additionnelles
+            const firstComposite = appState.composites[0];
+            const additionalColumns = Object.keys(firstComposite).filter(key => 
+                !['HoleID', 'From', 'To', 'Length', '_assays'].includes(key)
+            );
+            
+            // Ajouter les en-têtes pour les colonnes additionnelles
+            additionalColumns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                tableHead.appendChild(th);
+            });
+            
+            // Afficher les 100 premières lignes
+            const displayLimit = Math.min(100, appState.composites.length);
+            
+            for(let i = 0; i < displayLimit; i++) {
+                const row = appState.composites[i];
+                const tr = document.createElement('tr');
+                
+                let html = `
+                    <td>${row.HoleID}</td>
+                    <td>${row.From.toFixed(2)}</td>
+                    <td>${row.To.toFixed(2)}</td>
+                    <td>${row.Length.toFixed(2)}</td>
+                `;
+                
+                // Ajouter les valeurs des colonnes additionnelles
+                additionalColumns.forEach(column => {
+                    const value = row[column];
+                    
+                    if(typeof value === 'number') {
+                        html += `<td>${value.toFixed(3)}</td>`;
+                    } else if(typeof value === 'boolean') {
+                        html += `<td>${value ? 'Oui' : 'Non'}</td>`;
+                    } else {
+                        html += `<td>${value || ''}</td>`;
+                    }
+                });
+                
+                tr.innerHTML = html;
+                tableBody.appendChild(tr);
+            }
+            
+            if(appState.composites.length > displayLimit) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="${4 + additionalColumns.length}">... ${appState.composites.length - displayLimit} autres lignes non affichées ...</td>`;
+                tableBody.appendChild(tr);
+            }
+        }
+
+        // Export des données
+        document.getElementById('export-desurvey').addEventListener('click', () => {
+            if(!appState.desurveyedData) {
+                displayMessage('export-result', 'Aucune donnée de desurvey à exporter', 'warning');
+                return;
+            }
+            
+            exportToCSV(appState.desurveyedData, 'desurvey.csv');
+            displayMessage('export-result', 'Fichier desurvey.csv exporté avec succès', 'success');
+        });
+
+        document.getElementById('export-composites').addEventListener('click', () => {
+            if(!appState.composites) {
+                displayMessage('export-result', 'Aucune donnée de composite à exporter', 'warning');
+                return;
+            }
+            
+            // Créer une version des composites sans les propriétés internes
+            const cleanComposites = appState.composites.map(c => {
+                const clean = {...c};
+                delete clean._assays;
+                return clean;
+            });
+            
+            exportToCSV(cleanComposites, 'composites.csv');
+            displayMessage('export-result', 'Fichier composites.csv exporté avec succès', 'success');
+        });
+
+        function exportToCSV(data, filename) {
+            if(data.length === 0) return;
+            
+            // Obtenir les en-têtes en excluant les propriétés internes
+            const headers = Object.keys(data[0]).filter(k => !k.startsWith('_'));
+            
+            // Créer les lignes CSV
+            let csvContent = headers.join(',') + '\n';
+            
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    
+                    if(typeof value === 'number') {
+                        return value.toString();
+                    } else if(typeof value === 'string') {
+                        // Échapper les guillemets et entourer de guillemets si nécessaire
+                        if(value.includes(',') || value.includes('"') || value.includes('\n')) {
+                            return `"${value.replace(/"/g, '""')}"`;
+                        }
+                        return value;
+                    } else if(typeof value === 'boolean') {
+                        return value ? 'true' : 'false';
+                    } else if(value === null || value === undefined) {
+                        return '';
+                    } else {
+                        return value.toString();
+                    }
+                });
+                
+                csvContent += values.join(',') + '\n';
+            });
+            
+            // Créer un lien de téléchargement
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Fonction utilitaire pour afficher des messages
+        function displayMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Initialiser l'affichage des paramètres en fonction de la méthode sélectionnée
+        document.getElementById('grade-column-group').style.display = 'none';
+        document.getElementById('cutoff-grade-group').style.display = 'none';
+    </script>
+</body>
+</html>
